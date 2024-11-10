@@ -57,4 +57,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     // Add OkHttp dependency here
     implementation("com.squareup.okhttp3:okhttp:4.9.1")
+    // for navigation
+    implementation("androidx.navigation:navigation-compose:2.6.0")
 }
