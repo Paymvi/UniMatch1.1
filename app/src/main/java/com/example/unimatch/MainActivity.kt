@@ -1,6 +1,5 @@
 package com.example.unimatch
 
-import android.R.attr.text
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -17,7 +16,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -30,12 +28,25 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.unimatch.ui.theme.UniMatchTheme
 
+/* firebase */
+
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.auth.FirebaseAuth
+
+
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+
+
         setContent {
+
+
+
             UniMatchTheme {
                 val navController = rememberNavController()
                 var isAM by remember { mutableStateOf(true) } // Shared state for AM/PM selection
@@ -56,17 +67,45 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
+
 @Composable
 fun LoginScreen(navController: NavHostController) {
     var username by remember { mutableStateOf(TextFieldValue()) }
     var password by remember { mutableStateOf(TextFieldValue()) }
 
     // checks if input exists
-    val loginIsValid = username.text.isNotBlank() && username.text.isNotBlank()
+    val loginIsValid = username.text.isNotBlank() && password.text.isNotBlank()
 
+    val db = FirebaseFirestore.getInstance()
+    fun testFunction() {
+        db.collection("test").document("testDocument").set(mapOf("name" to "test")).
+        addOnSuccessListener { println("success") }.addOnFailureListener{e ->
+            println("Error writing document: $e")
+        }
 
+    }
     // to show/hide message
     val showLoginDialog  = remember { mutableStateOf(false) }
+
+    // to connect to firestore
+    val auth = FirebaseAuth.getInstance()
+
+    // for signing up a user and storing in firebase
+    fun signup(username: String, password:String ){
+
+        // creates a user with a given username and password
+        auth.createUserWithEmailAndPassword(username, password).addOnCompleteListener{
+
+            // if a user is created successfully, go to home page
+            task -> if(task.isSuccessful) {
+                navController.navigate("home")
+        // if not successful, print messgaes
+        }else{
+            println("AHHHHHHHHHHHHHHHHHHHHHHHHHHHHH")
+        }
+        }
+    }
 
     Scaffold(
         modifier = Modifier
@@ -109,17 +148,15 @@ fun LoginScreen(navController: NavHostController) {
                 Button(
                     onClick = {
                         // if question is answered, enable button
+
                         if(loginIsValid){
-                            navController.navigate("home")
+                            signup(username.text, password.text)
                         }
-                        else if (username.text.isBlank())
+                        else if (username.text.isBlank() || password.text.isBlank() )
                         {   // show dialog if no answer
                             showLoginDialog.value = true
                         }
-                        else if(password.text.isBlank())
-                        {   // show dialog if no answer
-                            showLoginDialog.value = true
-                        }
+
 
                     }
                 )
@@ -592,4 +629,6 @@ fun ResultsPagePreview() {
     val mockAnswers = FitnessQuizAnswers(workoutTime = "PM", workoutTimeOfDay = "Late Afternoon")
     ResultsPage(navController = rememberNavController(), answers = mockAnswers)
 }
+
+
 
