@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -48,6 +49,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.firebase.firestore.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -59,4 +61,10 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.9.1")
     // for navigation
     implementation("androidx.navigation:navigation-compose:2.6.0")
+
+    // Firebase SDKs
+    implementation("com.google.firebase:firebase-analytics-ktx:22.1.2")  // Firebase Analytics
+    implementation("com.google.firebase:firebase-auth-ktx:23.1.0")      // Firebase Authentication
+    implementation("com.google.firebase:firebase-database-ktx:21.0.0")  // Firebase Realtime Database
+    // Add other Firebase dependencies as needed
 }
