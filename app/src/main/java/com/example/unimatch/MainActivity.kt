@@ -11,6 +11,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,10 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.MutableLiveData
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -29,7 +33,6 @@ import androidx.navigation.compose.rememberNavController
 import com.example.unimatch.ui.theme.UniMatchTheme
 
 /* firebase */
-
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.auth.FirebaseAuth
 
@@ -54,7 +57,8 @@ class MainActivity : ComponentActivity() {
                 // stores answers for quiz
                 val answers = remember {FitnessQuizAnswers()}
 
-                NavHost(navController, startDestination = "login") {
+                NavHost(navController, startDestination = "login")  {
+                    composable("register") { RegistrationScreen(navController) }
                     composable("login") { LoginScreen(navController) }
                     composable("home") { HomeScreen(navController) }
                     composable("fitnessQuiz") { FitnessQuizScreen(navController, isAMSetter = { isAM = it }, answers) }
@@ -68,45 +72,240 @@ class MainActivity : ComponentActivity() {
 }
 
 
-
+// this is for the registration page
 @Composable
-fun LoginScreen(navController: NavHostController) {
+fun RegistrationScreen(navController: NavHostController) {
     var username by remember { mutableStateOf(TextFieldValue()) }
     var password by remember { mutableStateOf(TextFieldValue()) }
+    var name by remember { mutableStateOf(TextFieldValue()) }
+    var userPhone by remember { mutableStateOf(TextFieldValue()) }
+    var userSnap by remember { mutableStateOf(TextFieldValue()) }
+    var userInsta by remember { mutableStateOf(TextFieldValue()) }
 
     // checks if input exists
-    val loginIsValid = username.text.isNotBlank() && password.text.isNotBlank()
+    val registrationIsValid = username.text.isNotBlank() && password.text.isNotBlank()
+                            && name.text.isNotBlank() && userPhone.text.isNotBlank()
 
+    // to connect to firestore
     val db = FirebaseFirestore.getInstance()
-    fun testFunction() {
+
+/*    fun testFunction() {
         db.collection("test").document("testDocument").set(mapOf("name" to "test")).
         addOnSuccessListener { println("success") }.addOnFailureListener{e ->
             println("Error writing document: $e")
         }
 
-    }
+    }*/
     // to show/hide message
-    val showLoginDialog  = remember { mutableStateOf(false) }
+    val showRegistrationDialog  = remember { mutableStateOf(false) }
 
     // to connect to firestore
     val auth = FirebaseAuth.getInstance()
 
     // for signing up a user and storing in firebase
-    fun signup(username: String, password:String ){
+    fun signup(username: String, password: String, name: String, userPhone: String, contactInfo: Map<String, String?> ){
 
         // creates a user with a given username and password
         auth.createUserWithEmailAndPassword(username, password).addOnCompleteListener{
 
             // if a user is created successfully, go to home page
             task -> if(task.isSuccessful) {
+                val user = hashMapOf(
+                    "username" to username,
+                    "password" to password,
+                    "name" to name,
+                    "phoneNumber" to userPhone,
+                    "snapchat" to contactInfo["snapchat"],
+                    "instagram" to contactInfo["instagram"]
+
+                )
+            db.collection("users").document(auth.currentUser!!.uid).set(user).
+            addOnSuccessListener {
+                println("Registration successful.")
                 navController.navigate("home")
-        // if not successful, print messgaes
+            }.addOnFailureListener{e ->
+                println("Error writing document: $e")
+            }
+        // if not successful, print message
         }else{
-            println("AHHHHHHHHHHHHHHHHHHHHHHHHHHHHH")
+            println("Registration not successful.")
         }
         }
     }
 
+    Scaffold(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFA7CDEF)),
+        content = { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(text = "Register", style = MaterialTheme.typography.titleLarge)
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                TextButton(onClick = {
+                    // if clicked lead to registration page
+                    navController.navigate("login")
+                }) {
+                    Text(text = "Already have an account? Login in here!")
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+                // input field for name
+                TextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(7.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+                // input field for username/email
+                TextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    label = { Text("Username or Email") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(7.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+                // input field for password
+                TextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Password") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(7.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+                // input field for number
+                TextField(
+                    value = userPhone,
+                    onValueChange = { userPhone = it },
+                    label = { Text("Phone Number (required)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(7.dp),
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+                // input field for snapchat
+                TextField(
+                    value = userSnap,
+                    onValueChange = { userSnap = it },
+                    label = { Text("Snapchat (optional)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(7.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // input field for instagram
+                TextField(
+                    value = userInsta,
+                    onValueChange = { userInsta = it },
+                    label = { Text("Instagram (optional)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(7.dp)
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = {
+
+                        // if input is valid, enable button
+                        if(registrationIsValid){
+                            signup(username.text, password.text,
+                                   name.text, userPhone.text,
+                                   mapOf("snapchat" to userSnap.text.takeIf{it.isNotBlank()},
+                                         "instagram" to userInsta.text.takeIf{it.isNotBlank()})
+                            )
+                        }
+                        else if (username.text.isBlank() || password.text.isBlank()
+                                 || name.text.isBlank() || userPhone.text.isBlank())
+                        {   // show dialog if no answer
+                            showRegistrationDialog.value = true
+                        }
+                    }
+                )
+                {
+                    Text("Register")
+                }
+                /* informs user that all information must be entered */
+                if(showRegistrationDialog.value){
+                    // pop up with requirement, dismisses once user hits ok
+                    AlertDialog(
+                        onDismissRequest = {
+                            showRegistrationDialog.value = false
+                        },
+                        title = {Text("Invalid Input.")},
+                        text = {Text("Missing required information, please try again.")},
+                        confirmButton = {
+                            TextButton(
+                                onClick = {showRegistrationDialog.value = false}
+                            ){
+                                Text("OK")
+                            }
+                        }
+                    )
+                }
+
+            }
+        }
+    )
+}
+
+/* Authentication State *//*
+sealed class AuthState{
+    object Authenticated : AuthState()
+    object Unauthenticated : AuthState()
+    object LoadingAuthentication : AuthState()
+    data class AuthenticationError(val message : String) : AuthState()
+}*/
+
+// this is for the login page
+@Composable
+fun LoginScreen(navController: NavHostController) {
+    var username by remember { mutableStateOf(TextFieldValue()) }
+    var password by remember { mutableStateOf(TextFieldValue()) }
+
+
+    // checks if input exists
+    val loginIsValid = username.text.isNotBlank() && password.text.isNotBlank()
+
+    // to connect to firestore
+    val auth = FirebaseAuth.getInstance()
+
+
+    // to show/hide message
+    val showLoginDialog  = remember { mutableStateOf(false) }
+
+    // for signing up a user and storing in firebase
+    fun signin(username: String, password:String ){
+
+        // creates a user with a given username and password
+        auth.signInWithEmailAndPassword(username, password).addOnCompleteListener{
+
+            // if a user is created successfully, go to home page
+                task -> if(task.isSuccessful) {
+            navController.navigate("home")
+            // if not successful, print message
+        }else{
+            println("Login not successful")
+        }
+        }
+    }
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -143,20 +342,31 @@ fun LoginScreen(navController: NavHostController) {
                     shape = RoundedCornerShape(7.dp)
                 )
 
+                Spacer(modifier = Modifier.height(16.dp))
+
+                TextButton(onClick = {
+                    // if clicked lead to registration page
+                    navController.navigate("register")
+                }) {
+                    Text(text = "Don't have an account? Sign up here!")
+                }
+
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Button(
                     onClick = {
                         // if question is answered, enable button
-
                         if(loginIsValid){
-                            signup(username.text, password.text)
+                            signin(username.text, password.text)
                         }
-                        else if (username.text.isBlank() || password.text.isBlank() )
+                        else if (username.text.isBlank())
                         {   // show dialog if no answer
                             showLoginDialog.value = true
                         }
-
+                        else if(password.text.isBlank())
+                        {   // show dialog if no answer
+                            showLoginDialog.value = true
+                        }
 
                     }
                 )
@@ -189,6 +399,7 @@ fun LoginScreen(navController: NavHostController) {
 
 @Composable
 fun HomeScreen(navController: NavHostController) {
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -196,7 +407,7 @@ fun HomeScreen(navController: NavHostController) {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Welcome to the Home Screen!")
+            Text("Welcome to UniMatch!")
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = {
@@ -204,6 +415,15 @@ fun HomeScreen(navController: NavHostController) {
                 }
             ) {
                 Text("Start Fitness Quiz")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            TextButton(onClick = {
+                // if clicked lead to registration page
+                navController.navigate("login")
+            }) {
+                Text(text = "Sign out")
             }
         }
     }
