@@ -58,13 +58,18 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     // Add OkHttp dependency here
-    implementation("com.squareup.okhttp3:okhttp:4.9.1")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     // for navigation
-    implementation("androidx.navigation:navigation-compose:2.6.0")
+    implementation("androidx.navigation:navigation-compose:2.8.5")
 
     // Firebase SDKs
     implementation("com.google.firebase:firebase-analytics-ktx:22.1.2")  // Firebase Analytics
     implementation("com.google.firebase:firebase-auth-ktx:23.1.0")      // Firebase Authentication
     implementation("com.google.firebase:firebase-database-ktx:21.0.0")  // Firebase Realtime Database
-    // Add other Firebase dependencies as needed
+    implementation("com.google.firebase:firebase-firestore-ktx:25.1.1") // Firebase Firestore
+
+    // splash page
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+
 }
